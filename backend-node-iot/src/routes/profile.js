@@ -5,10 +5,26 @@ import auth from '../middleware/auth.js';
 const router = Router();
 
 // GET /profile (protected)
-router.get('/profile', auth, async (req, res) => {
-  const user = await db('users').where({ id: req.userId }).first().select('id', 'name', 'email');
-  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-  res.json(user);
+router.get('/users', auth, async (req, res) => {
+    try {
+        // Seleccionamos id, name, email (NO la password)
+        const users = await db('users').select('id', 'name', 'email'); 
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener usuarios' });
+    }
+});
+
+// --- NUEVO: Borrar usuario (Para el botón eliminar) ---
+router.delete('/users/:id', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db('users').where({ id }).del();
+        res.json({ success: true, message: 'Usuario eliminado' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al eliminar' });
+    }
 });
 
 export default router;
